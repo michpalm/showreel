@@ -1,6 +1,6 @@
 {
   "name": "showreel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Record the Steam UI on SteamOS handhelds (Quick Access included) for plugin showcases",
   "type": "module",
   "scripts": {
