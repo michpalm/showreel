@@ -55,6 +55,7 @@ class Deps:
     own_pid: int
     free_bytes: Callable[[], int]
     localtime: Callable[[], time.struct_time] = field(default=time.localtime)
+    find_recorders: Callable[[], list[tuple[int, str]]] = field(default=lambda: [])
 
 
 class _Cancelled(Exception):
@@ -139,6 +140,7 @@ class Recorder:
             for attempt in (1, 2):
                 self._check_cancel()
                 handle = self._d.spawn(gsr.command(self._mkv), self._log_path)
+                self._d.write_lock(handle.pid)  # the wrapper lives exactly as long as gsr: never an unnamed recorder
                 self._d.emit("recording_starting")
                 outcome = self._wait_streaming(handle)
                 if outcome == "streaming":
@@ -148,6 +150,7 @@ class Recorder:
                 tail = self._d.log_tail(self._log_path)
                 if attempt == 1 and gsr.NEGOTIATION_TIMEOUT in tail:
                     log.info("[showreel] no first frame, retrying once")
+                    self._d.write_lock(self._d.own_pid)
                     handle, self._inner = None, None
                     continue
                 return self._abort(handle, error="GPU Screen Recorder stopped: " + _last_line(tail))
@@ -312,6 +315,16 @@ class Recorder:
                     self._mkv = output
                     self._mp4 = output[:-4] + ".mp4" if output.endswith(".mkv") else output + ".mp4"
                 self._finish("user")
+        for pid, output in self._d.find_recorders():  # e.g. the backend died while gsr was starting
+            if not output.startswith(os.path.join(self._lib.root, "")):
+                continue
+            log.warning("[showreel] finishing an orphaned recorder %s", pid)
+            self._d.write_lock(pid)
+            with self._mx:
+                self._state, self._inner = "finishing", pid
+                self._mkv = output
+                self._mp4 = output[:-4] + ".mp4" if output.endswith(".mkv") else output + ".mp4"
+            self._finish("user")
         for stem in self._lib.stray_recordings():
             with self._mx:
                 self._mkv, self._mp4 = self._lib.paths(stem)

@@ -70,6 +70,21 @@ def find_inner_pid(wrapper_pid: int, proc_root: str = "/proc") -> int | None:
     return None
 
 
+def recorders_writing_into(root: str, proc_root: str = "/proc") -> list[tuple[int, str]]:
+    """Every running gpu-screen-recorder whose output file is inside `root`, as (pid, output)."""
+    found = []
+    prefix = os.path.join(root, "")
+    for entry in os.listdir(proc_root):
+        if not entry.isdigit():
+            continue
+        argv = _argv(int(entry), proc_root)
+        if argv and os.path.basename(argv[0]) == "gpu-screen-recorder":
+            output = output_of(int(entry), proc_root)
+            if output and output.startswith(prefix):
+                found.append((int(entry), output))
+    return sorted(found)
+
+
 def output_of(pid: int, proc_root: str = "/proc") -> str | None:
     argv = _argv(pid, proc_root)
     if "-o" in argv and argv.index("-o") + 1 < len(argv):

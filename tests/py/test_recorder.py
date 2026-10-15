@@ -142,6 +142,7 @@ class World:
                     remove_lock=self.remove_lock, read_lock=self.read_lock, remux=self.remux,
                     installed=lambda: self.installed_ok, log_tail=lambda path: self.last_log,
                     output_of=lambda pid: getattr(self, "orphan_output", None) if pid in self.alive else None,
+                    find_recorders=lambda: [(p, o) for p, o in getattr(self, "orphans", []) if p in self.alive],
                     emit=self.emit, clock=lambda: self.t, sleep=self.sleep, own_pid=OWN,
                     localtime=lambda: NOW, free_bytes=lambda: self.free)
 
@@ -164,7 +165,7 @@ def test_start_order(tmp_path):
     spawn_at = kinds(world).index("spawn")
     assert ("consumers", []) in world.log[:world.log.index(("spawn", gsr.command(
         os.path.join(world.library.root, "2026-10-15_14-03-22.mkv"))))]
-    assert kinds(world)[spawn_at + 1:] == ["write_lock"] and world.lock["pid"] == 1002
+    assert kinds(world)[spawn_at + 1:] == ["write_lock", "write_lock"] and world.lock["pid"] == 1002
     assert rec.status()["state"] == "recording"
     assert ("recording_starting",) in world.events
 
@@ -442,3 +443,37 @@ def test_not_streaming_until_negotiation_finished(tmp_path):
     rec._d.spawn = spawn_without_negotiation
     assert rec.start() == {"ok": False, "error": "GPU Screen Recorder did not start"}
     assert world.lock is None and not world.alive
+
+
+def test_lock_names_the_wrapper_as_soon_as_gsr_is_launched(tmp_path):
+    world, rec = make(tmp_path)
+    rec.start()
+    spawn_at = world.log.index(next(e for e in world.log if e[0] == "spawn"))
+    after = [e for e in world.log[spawn_at + 1:] if e[0] == "write_lock"]
+    assert after[0] == ("write_lock", 1000) and after[-1] == ("write_lock", 1002)
+
+
+def test_retry_holds_the_lock_with_our_pid_between_attempts(tmp_path):
+    world, rec = make(tmp_path)
+    world.early_exit_logs = [f"{gsr.NEGOTIATION_TIMEOUT}\n"]
+    rec.start()
+    spawns = [i for i, e in enumerate(world.log) if e[0] == "spawn"]
+    between = [e for e in world.log[spawns[0]:spawns[1]] if e[0] == "write_lock"]
+    assert between[-1] == ("write_lock", OWN)
+
+
+def test_recover_finds_a_recorder_the_lock_does_not_name(tmp_path):
+    world, rec = make(tmp_path)
+    mkv = os.path.join(world.library.root, "2026-10-15_10-42-41.mkv")
+    with open(mkv, "wb") as f:
+        f.write(b"q" * 50)
+    world.alive.add(54585)
+    world.readers = ["gpu-screen-recorder"]
+    world.inner = {}
+    world.orphans = [(54585, mkv)]
+    world.lock = {"pid": 50567, "owner": "Showreel"}  # the backend that died during start
+    rec.recover()
+    sig = world.log.index(("signal", 54585, signal.SIGINT))
+    assert ("write_lock", 54585) in world.log[:sig]  # Ambideck kept away while it is stopped
+    assert world.lock is None and not world.alive
+    assert os.path.exists(mkv[:-4] + ".mp4") and not os.path.exists(mkv)

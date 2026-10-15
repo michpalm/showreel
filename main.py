@@ -140,7 +140,10 @@ class Plugin:
         loop = asyncio.get_running_loop()
 
         def emit(event, *args):
-            asyncio.run_coroutine_threadsafe(decky.emit(event, *args), loop)
+            try:
+                asyncio.run_coroutine_threadsafe(decky.emit(event, *args), loop)
+            except RuntimeError:  # the loop is closing (unload): the event no longer matters
+                pass
 
         self.library = Library(os.path.join(decky.DECKY_USER_HOME, "Videos", "Showreel"),
                                probe_duration=probe_duration, chown=chown)
@@ -149,7 +152,8 @@ class Plugin:
             spawn=spawn, signal=send, pid_alive=pid_alive, find_inner_pid=gsr.find_inner_pid, consumers=consumers,
             write_lock=lock.write_lock, remove_lock=lock.remove_lock, read_lock=lock.read_lock, remux=remux,
             installed=installed, log_tail=log_tail, output_of=gsr.output_of, emit=emit, clock=time.monotonic,
-            sleep=time.sleep, own_pid=os.getpid(), free_bytes=self.library.free_bytes, localtime=time.localtime),
+            sleep=time.sleep, own_pid=os.getpid(), free_bytes=self.library.free_bytes, localtime=time.localtime,
+            find_recorders=lambda: gsr.recorders_writing_into(self.library.root)),
             log_path=GSR_LOG)
         await asyncio.to_thread(self.recorder.recover)
         self.server = DownloadServer(self.library, port=PORT)

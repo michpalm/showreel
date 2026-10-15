@@ -53,3 +53,10 @@ def test_output_of(tmp_path):
     assert gsr.output_of(102, root) == "/home/deck/Videos/Showreel/x.mkv"
     assert gsr.output_of(200, root) is None
     assert gsr.output_of(999, root) is None
+
+
+def test_recorders_writing_into(tmp_path):
+    root = fake_proc(tmp_path)
+    assert gsr.recorders_writing_into("/home/deck/Videos/Showreel", root) == [
+        (102, "/home/deck/Videos/Showreel/x.mkv")]
+    assert gsr.recorders_writing_into("/elsewhere", root) == []
