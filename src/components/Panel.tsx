@@ -1,11 +1,16 @@
-import { ButtonItem, ConfirmModal, Field, PanelSection, PanelSectionRow, showModal, ToggleField } from '@decky/ui';
+import { ButtonItem, ConfirmModal, DialogButton, Field, PanelSection, PanelSectionRow, showModal, ToggleField } from '@decky/ui';
 import { useCallback, useEffect, useState } from 'react';
+import { FaTrash } from 'react-icons/fa';
 import { backend, Recording, ServerState, Status } from '../backend';
 import { formatElapsed, formatSize } from '../format';
 import { panelState } from '../panelState';
 
 const IDLE: Status = { state: 'idle', elapsed: 0, size: 0, file: null, error: null, gameRunning: false };
 const RECENT = 5;
+const TRASH_BUTTON = {
+    minWidth: 0, width: 40, height: 40, padding: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+} as const;
 
 export function Panel() {
     const [status, setStatus] = useState<Status>(IDLE);
@@ -73,7 +78,9 @@ export function Panel() {
                         <PanelSectionRow key={r.name}>
                             <Field label={r.name} description={[formatSize(r.size), r.duration ? formatElapsed(r.duration) : null]
                                 .filter(Boolean).join(' · ')} bottomSeparator="none">
-                                <ButtonItem layout="inline" onClick={() => confirmDelete(r.name)}>Delete</ButtonItem>
+                                <DialogButton style={TRASH_BUTTON} onClick={() => confirmDelete(r.name)}>
+                                    <FaTrash color="#e5484d" />
+                                </DialogButton>
                             </Field>
                         </PanelSectionRow>
                     ))}
