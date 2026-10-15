@@ -48,6 +48,13 @@ scripts/serve.sh     # serve it to the device on port 8767
 A personal project, maintained on a best-effort basis. The code was written with [Claude](https://claude.ai)
 (Anthropic's AI), directed, reviewed and tested on device by the author.
 
+## Support
+
+Showreel is free. If you'd like to support its development, you can do so on Ko-fi. It's entirely optional: bug
+reports and ideas are just as welcome.
+
+[![Support Showreel on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/michpalm)
+
 ## Credits
 
 - Recording by [GPU Screen Recorder](https://git.dec05eba.com/gpu-screen-recorder/about/) by dec05eba (flatpak
