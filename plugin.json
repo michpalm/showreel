@@ -1,0 +1,17 @@
+{
+  "name": "Showreel",
+  "author": "Michael Palma",
+  "flags": [
+    "root"
+  ],
+  "api_version": 1,
+  "publish": {
+    "tags": [
+      "recording",
+      "video",
+      "root"
+    ],
+    "description": "Record the Steam UI on the ROG Xbox Ally for plugin showcases",
+    "image": ""
+  }
+}
