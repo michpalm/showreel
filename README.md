@@ -1,10 +1,10 @@
 # Showreel
 
-A small Decky plugin that records the Steam UI on the ROG Xbox Ally, Quick Access menu and Decky panels included, so you can show off plugins. It has one button: **Record**, then **Stop**.
+A small Decky plugin that records the Steam UI in SteamOS Game Mode (Steam Deck, ROG Ally, Legion Go and other handhelds), Quick Access menu and Decky panels included, so you can show off plugins. It has one button: **Record**, then **Stop**.
 
-- **Video:** H.264 MP4, 1080p at 60 fps, encoded on the GPU by [GPU Screen Recorder](https://git.dec05eba.com/gpu-screen-recorder/about/). No audio.
+- **Video:** H.264 MP4 at the screen's own resolution (for example 1920×1080 on a ROG Ally, 1280×800 on a Steam Deck) and 60 fps, encoded on the GPU by [GPU Screen Recorder](https://git.dec05eba.com/gpu-screen-recorder/about/). No audio.
 - **Files:** saved to `~/Videos/Showreel/` as `YYYY-MM-DD_HH-MM-SS.mp4`. `latest.mp4` always points to the newest one.
-- **Download page** (off by default): switch it on in the panel and open the address it shows (`http://<ally-ip>:8790/`) on another device. Tools can fetch `/recordings.json` and `/latest.mp4`. The page is read-only.
+- **Download page** (off by default): switch it on in the panel and open the address it shows (`http://<device-ip>:8790/`) on another device. Tools can fetch `/recordings.json` and `/latest.mp4`. The page is read-only.
 
 ## Steam UI only
 
@@ -14,7 +14,8 @@ The reason: on SteamOS 3.8 (gamescope 3.16), disconnecting a full-size screen ca
 
 ## Requirements
 
-- SteamOS in Game Mode, with Decky Loader.
+- SteamOS (or another gamescope Game Mode session) with Decky Loader.
+- Tested on a ROG Xbox Ally running SteamOS 3.8. Nothing in Showreel is device-specific, so other SteamOS devices should work; reports welcome.
 - The GPU Screen Recorder flatpak. Install it from Discover in Desktop Mode, or run:
 
   ```
